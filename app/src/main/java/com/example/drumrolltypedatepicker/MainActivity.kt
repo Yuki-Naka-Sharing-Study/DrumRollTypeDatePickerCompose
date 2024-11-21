@@ -130,14 +130,30 @@ fun <T> ScrollPicker(
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
 
-    // Update selected item when scroll stops
+    // 初期位置にスクロール
+    LaunchedEffect(items, selectedItem) {
+        val initialIndex = items.indexOf(selectedItem).coerceAtLeast(0)
+        listState.scrollToItem(initialIndex)
+    }
+
+    // スクロール停止時の選択更新
     LaunchedEffect(listState) {
         snapshotFlow { listState.isScrollInProgress }
             .collect { isScrolling ->
                 if (!isScrolling) {
-                    val centerIndex = (listState.firstVisibleItemIndex + (listState.layoutInfo.visibleItemsInfo.size / 2))
-                        .coerceIn(0, items.lastIndex)
-                    onItemSelected(items[centerIndex])
+                    val firstVisibleIndex = listState.firstVisibleItemIndex
+                    val firstVisibleItemOffset = listState.firstVisibleItemScrollOffset
+                    val visibleItems = listState.layoutInfo.visibleItemsInfo
+
+                    if (visibleItems.isNotEmpty()) {
+                        val centerIndex = if (firstVisibleItemOffset > (visibleItems.first().size / 2)) {
+                            firstVisibleIndex + 1
+                        } else {
+                            firstVisibleIndex
+                        }.coerceIn(0, items.lastIndex)
+
+                        onItemSelected(items[centerIndex])
+                    }
                 }
             }
     }
