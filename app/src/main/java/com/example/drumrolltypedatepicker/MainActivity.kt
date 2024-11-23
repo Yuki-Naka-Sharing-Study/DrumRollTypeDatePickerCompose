@@ -14,7 +14,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.drumrolltypedatepicker.ui.theme.DrumRollTypeDatePickerTheme
@@ -24,23 +23,49 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            DrumRollTypeDatePicker()
+            DrumRollTypeDatePickerTheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    DrumRollTypeDatePickerScreen()
+                }
+            }
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DrumRollTypeDatePicker() {
+fun DrumRollTypeDatePickerScreen() {
+    var selectedDate by remember { mutableStateOf("") }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        Spacer(modifier = Modifier.height(32.dp))
+
+        DrumRollTypeDatePicker { date ->
+            selectedDate = date
+        }
+        OutlinedTextField(
+            value = selectedDate,
+            onValueChange = { },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text("日付 (年-月-日)") },
+            readOnly = true
+        )
+    }
+}
+
+@Composable
+fun DrumRollTypeDatePicker(onDateSelected: (String) -> Unit) {
     var isPickerVisible by remember { mutableStateOf(false) }
     var selectedDate by remember { mutableStateOf("日付を選択") }
 
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
+    Box(contentAlignment = Alignment.Center) {
+        Column() {
             Button(onClick = { isPickerVisible = true }) {
                 Text(text = selectedDate)
             }
@@ -51,6 +76,7 @@ fun DrumRollTypeDatePicker() {
                 onDismiss = { isPickerVisible = false },
                 onDateSelected = { year, month, day ->
                     selectedDate = "$year 年 $month 月 $day 日"
+                    onDateSelected(selectedDate)
                     isPickerVisible = false
                 }
             )
@@ -64,7 +90,7 @@ fun DatePickerDialog(
     onDateSelected: (Int, Int, Int) -> Unit
 ) {
     val currentYear = Calendar.getInstance().get(Calendar.YEAR)
-    val years = (1900..2100).toList()
+    val years = (2016..2100).toList()
     val months = (1..12).toList()
     val days = (1..31).toList()
 
@@ -147,7 +173,7 @@ fun <T> ScrollPicker(
 
                     if (visibleItems.isNotEmpty()) {
                         val centerIndex = if (firstVisibleItemOffset > (visibleItems.first().size / 2)) {
-                            firstVisibleIndex + 1
+                            firstVisibleIndex + 5
                         } else {
                             firstVisibleIndex
                         }.coerceIn(0, items.lastIndex)
